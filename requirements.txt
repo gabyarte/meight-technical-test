@@ -10,4 +10,5 @@ pydantic_settings==2.1.*
 matplotlib==3.9.*
 scipy==1.13.*
 structlog==24.4.*
+streamlit==1.38.*
 awslambdaric
