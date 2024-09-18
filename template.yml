@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: |
+  SAM Template for Meight Pipeline
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 512
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  PipelineStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      Name: !Sub ${Environment}-meight-pipeline
+      DefinitionSubstitutions:
+        IngestFunctionArn: !GetAtt IngestFunction.Arn
+      Events:
+        PipelineSchedule:
+          Type: Schedule
+          Properties:
+            Name: !Sub ${Environment}-meight-schedule
+            Description: Schedule to run pipeline every day
+            Enabled: true
+            Schedule: cron(0 6 * * ? *)
+            Input: '{}'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IngestFunction
+            StateMachineName: !Sub ${Environment}-meight-pipeline
+      DefinitionUri: statemachine/pipeline.asl.json
+
+  IngestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${Environment}-ingest-function
+      PackageType: Image
+      ImageConfig:
+        EntryPoint:
+          - python3
+          - '-m'
+          - awslambdaric
+        Command:
+          - functions/ingest_function/app.lambda_handler
+      Policies:
+        - Statement:
+            - Sid: IngestS3GetPolicy
+              Effect: Allow
+              Action:
+                - s3:GetObject
+              Resource: arn:aws:s3:::*
+      Environment:
+        Variables:
+          DATABASE_USER: !Sub '{{resolve:ssm:/meight-de/${Environment}_db_user}}'
+          DATABASE_PASSWORD: !Sub '{{resolve:ssm:/meight-de/${Environment}_db_password}}'
+          DATABASE_PORT: !Sub '{{resolve:ssm:/meight-de/${Environment}_db_port}}'
+          DATABASE_HOST: !Sub '{{resolve:ssm:/meight-de/${Environment}_db_server}}'
+          DATABASE_DB: !Sub '{{resolve:ssm:/meight-de/${Environment}_db}}'
+    Metadata:
+      DockerTag: latest
+      DockerContext: .
+      Dockerfile: Dockerfile
+
+Outputs:
+  PipelineStateMachineArn:
+    Description: Pipeline State machine ARN
+    Value: !Ref PipelineStateMachine
+  PipelineStateMachineRoleArn:
+    Description: IAM Role created for ETL Pipeline State machine based on the
+      specified SAM Policy Templates
+    Value: !GetAtt PipelineStateMachineRole.Arn

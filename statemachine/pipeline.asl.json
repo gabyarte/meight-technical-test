@@ -1,0 +1,28 @@
+{
+    "Comment": "A state machine to transform and load data.",
+    "StartAt": "IngestData",
+    "States": {
+        "IngestData": {
+            "Type": "Task",
+            "Resource": "${IngestFunctionArn}",
+            "Next": "IsTotalPagesReached"
+        },
+
+        "IsTotalPagesReached": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.page",
+                "NumericLessThanEqualsPath": "$.total_pages",
+                "Next": "IngestData"
+              }
+            ],
+            "Default": "End"
+          },
+
+        "End": {
+            "Type": "Pass",
+            "End": true
+        }
+    }
+}
