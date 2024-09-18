@@ -19,3 +19,8 @@ Design and build a data pipeline that processes and transforms historical road f
 5. Analytics Integration: Analytics output should return percentile 25, percentile 75 and average of the selected user input data
 6. Data Visualization and Reporting (Bonus): Historical price trends by region and service. Forecasted prices and their comparison with actual prices. Moving averages, price fluctuations, and market trends.
 7. Infrastructure (Bonus): Build your solution with infrastructure as code when aplicable
+
+
+## Cleaning Process
+
+**Assumption:** The given example data is assumed as the historical (or initial) data, so the outlier detection parameters are set based on it.

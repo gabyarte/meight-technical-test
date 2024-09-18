@@ -1,0 +1,14 @@
+# hidden files
+.DS_Store
+
+# directories
+# data/
+# notebooks/
+.vscode/
+__pycache__/
+.pytest_cache/
+.aws-sam/
+
+# files
+# *.csv
+.env
